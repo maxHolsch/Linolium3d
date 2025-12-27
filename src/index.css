@@ -1,18 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Mountains of Christmas', Inter, system-ui, cursive;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #020617;
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(180deg, #0c1a0c 0%, #1a0a0a 50%, #0d1a1a 100%);
+  background-attachment: fixed;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Christmas color palette */
+  --christmas-red: #c41e3a;
+  --christmas-red-dark: #8b0000;
+  --christmas-green: #228b22;
+  --christmas-green-dark: #006400;
+  --christmas-gold: #ffd700;
+  --christmas-cream: #fffdd0;
+  --christmas-pine: #0b3b0b;
+  --christmas-snow: #f0f8ff;
 }
 
 body {
@@ -21,4 +32,147 @@ body {
   place-content: center;
   min-width: 320px;
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Snowfall animation */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh) translateX(20px);
+    opacity: 0.3;
+  }
+}
+
+@keyframes snowfall-drift {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(15px);
+  }
+}
+
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(196, 30, 58, 0.3), 0 0 40px rgba(196, 30, 58, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(196, 30, 58, 0.5), 0 0 60px rgba(196, 30, 58, 0.2);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Snowflake styles */
+.snowflake {
+  position: fixed;
+  color: white;
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 100;
+  animation: snowfall linear infinite, snowfall-drift ease-in-out infinite;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+/* Christmas button styles */
+.christmas-btn-primary {
+  background: linear-gradient(135deg, var(--christmas-red) 0%, var(--christmas-red-dark) 100%);
+  border: 2px solid var(--christmas-gold);
+  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.christmas-btn-primary:hover {
+  background: linear-gradient(135deg, #d4243f 0%, #a00 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.christmas-btn-secondary {
+  background: linear-gradient(135deg, var(--christmas-green) 0%, var(--christmas-green-dark) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(34, 139, 34, 0.4);
+}
+
+.christmas-btn-secondary:hover {
+  background: linear-gradient(135deg, #2ea02e 0%, #007700 100%);
+  transform: translateY(-2px);
+}
+
+/* Gold shimmer effect */
+.gold-shimmer {
+  background: linear-gradient(90deg,
+      var(--christmas-gold) 0%,
+      #fff8dc 25%,
+      var(--christmas-gold) 50%,
+      #fff8dc 75%,
+      var(--christmas-gold) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Christmas card styling */
+.christmas-card {
+  background: linear-gradient(145deg, rgba(11, 59, 11, 0.3) 0%, rgba(139, 0, 0, 0.2) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+/* Festive header */
+.christmas-header {
+  background: linear-gradient(180deg, rgba(139, 0, 0, 0.3) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+/* Star decoration */
+@keyframes star-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.star-decoration {
+  animation: twinkle 2s ease-in-out infinite;
 }

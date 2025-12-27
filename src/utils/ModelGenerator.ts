@@ -1,7 +1,27 @@
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 
-export const create3DModel = (svgString: string, extrusionDepth: number = 3, baseThickness: number = 2) => {
+// Conversion: 1 inch = 25.4 mm
+const INCH_TO_MM = 25.4;
+
+export interface ModelDimensions {
+    targetWidthInches: number;   // Width in inches (X dimension)
+    targetLengthInches: number;  // Length in inches (Y dimension)
+    extrusionDepthMm: number;    // Extrusion height in mm
+    baseThicknessMm: number;     // Base plate thickness in mm
+    curveSegments: number;       // Number of segments for curves (lower = fewer triangles)
+}
+
+export const create3DModel = (
+    svgString: string,
+    dimensions: ModelDimensions = {
+        targetWidthInches: 4,
+        targetLengthInches: 5,
+        extrusionDepthMm: 3,
+        baseThicknessMm: 3,
+        curveSegments: 4  // Low default for fewer triangles (~295k or less)
+    }
+) => {
     const loader = new SVGLoader();
     const svgData = loader.parse(svgString);
     const paths = svgData.paths;
@@ -12,7 +32,14 @@ export const create3DModel = (svgString: string, extrusionDepth: number = 3, bas
         return group;
     }
 
-    // Find bounding box to center and scale
+    // Convert target dimensions from inches to mm
+    const targetWidthMm = dimensions.targetWidthInches * INCH_TO_MM;
+    const targetLengthMm = dimensions.targetLengthInches * INCH_TO_MM;
+    const extrusionDepth = dimensions.extrusionDepthMm;
+    const baseThickness = dimensions.baseThicknessMm;
+    const curveSegments = dimensions.curveSegments;
+
+    // Find bounding box of SVG to determine scale
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
     paths.forEach(path => {
@@ -31,10 +58,18 @@ export const create3DModel = (svgString: string, extrusionDepth: number = 3, bas
         return group;
     }
 
-    const width = maxX - minX;
-    const height = maxY - minY;
-    const centerX = minX + width / 2;
-    const centerY = minY + height / 2;
+    const svgWidth = maxX - minX;
+    const svgHeight = maxY - minY;
+    const centerX = minX + svgWidth / 2;
+    const centerY = minY + svgHeight / 2;
+
+    // Calculate scale factor to fit SVG within target dimensions while preserving aspect ratio
+    // This ensures full fidelity - the SVG is scaled uniformly
+    const scaleX = targetWidthMm / svgWidth;
+    const scaleY = targetLengthMm / svgHeight;
+    const scaleFactor = Math.min(scaleX, scaleY); // Use smaller scale to fit within bounds
+
+    let totalTriangles = 0;
 
     // Extrude each path
     paths.forEach((path) => {
@@ -49,10 +84,23 @@ export const create3DModel = (svgString: string, extrusionDepth: number = 3, bas
             const geometry = new THREE.ExtrudeGeometry(shape, {
                 depth: extrusionDepth,
                 bevelEnabled: false,
+                curveSegments: curveSegments,  // Controls curve smoothness/triangle count
+                steps: 1  // Single step for extrusion depth
             });
 
-            // Center the geometry
+            // Center the geometry first
             geometry.translate(-centerX, -centerY, 0);
+
+            // Scale to target dimensions (uniform scaling preserves fidelity)
+            geometry.scale(scaleFactor, scaleFactor, 1);
+
+            // Move extrusion UP to sit on top of the base plate
+            // Base goes from 0 to baseThickness, extrusion from baseThickness to baseThickness+extrusionDepth
+            geometry.translate(0, 0, baseThickness);
+
+            // Count triangles
+            const triangleCount = geometry.attributes.position.count / 3;
+            totalTriangles += triangleCount;
 
             const material = new THREE.MeshStandardMaterial({ color: 0x808080 }); // Grey
             const mesh = new THREE.Mesh(geometry, material);
@@ -60,17 +108,24 @@ export const create3DModel = (svgString: string, extrusionDepth: number = 3, bas
         });
     });
 
-    // Add base plate
-    const baseGeometry = new THREE.BoxGeometry(width + 10, height + 10, baseThickness);
+    // Add base plate sized to the target dimensions
+    // Base matches the specified dimensions exactly
+    const baseGeometry = new THREE.BoxGeometry(targetWidthMm, targetLengthMm, baseThickness);
     const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 }); // Black
     const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
 
-    // Position base below the extrusion
-    baseMesh.position.z = -baseThickness / 2;
+    // Position base so it goes from Z=0 to Z=baseThickness (bottom of model)
+    // Extrusion sits on top from Z=baseThickness to Z=baseThickness+extrusionDepth
+    baseMesh.position.z = baseThickness / 2;
     group.add(baseMesh);
+
+    // Log triangle count for debugging
+    totalTriangles += 12; // Base box has 12 triangles (6 faces × 2 triangles)
+    console.log(`Model generated with approximately ${totalTriangles} triangles`);
 
     // Rotate group to lay flat on XY plane (standard for 3D printing)
     group.rotation.x = -Math.PI / 2;
 
     return group;
 };
+
