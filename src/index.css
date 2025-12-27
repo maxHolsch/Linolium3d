@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  font-family: 'Mountains of Christmas', Inter, system-ui, cursive;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.95);
-  background: linear-gradient(180deg, #0c1a0c 0%, #1a0a0a 50%, #0d1a1a 100%);
+  background: linear-gradient(180deg, #1a0202 0%, #000000 50%, #1a0202 100%);
   background-attachment: fixed;
 
   font-synthesis: none;
@@ -15,15 +15,13 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Christmas color palette */
-  --christmas-red: #c41e3a;
-  --christmas-red-dark: #8b0000;
-  --christmas-green: #228b22;
-  --christmas-green-dark: #006400;
-  --christmas-gold: #ffd700;
-  --christmas-cream: #fffdd0;
-  --christmas-pine: #0b3b0b;
-  --christmas-snow: #f0f8ff;
+  /* USC color palette */
+  --usc-cardinal: #990000;
+  --usc-cardinal-dark: #660000;
+  --usc-gold: #FFCC00;
+  --usc-gold-light: #FFDC40;
+  --usc-black: #111111;
+  --usc-grey: #333333;
 }
 
 body {
@@ -36,30 +34,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Snowfall animation */
-@keyframes snowfall {
-  0% {
-    transform: translateY(-100vh) translateX(0);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateY(100vh) translateX(20px);
-    opacity: 0.3;
-  }
-}
-
-@keyframes snowfall-drift {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  50% {
-    transform: translateX(15px);
-  }
-}
 
 @keyframes twinkle {
 
@@ -79,11 +53,11 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(196, 30, 58, 0.3), 0 0 40px rgba(196, 30, 58, 0.1);
+    box-shadow: 0 0 20px rgba(153, 0, 0, 0.3), 0 0 40px rgba(153, 0, 0, 0.1);
   }
 
   50% {
-    box-shadow: 0 0 30px rgba(196, 30, 58, 0.5), 0 0 60px rgba(196, 30, 58, 0.2);
+    box-shadow: 0 0 30px rgba(153, 0, 0, 0.5), 0 0 60px rgba(153, 0, 0, 0.2);
   }
 }
 
@@ -97,50 +71,41 @@ body {
   }
 }
 
-/* Snowflake styles */
-.snowflake {
-  position: fixed;
-  color: white;
-  font-size: 1rem;
-  pointer-events: none;
-  z-index: 100;
-  animation: snowfall linear infinite, snowfall-drift ease-in-out infinite;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-}
 
-/* Christmas button styles */
-.christmas-btn-primary {
-  background: linear-gradient(135deg, var(--christmas-red) 0%, var(--christmas-red-dark) 100%);
-  border: 2px solid var(--christmas-gold);
-  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+/* USC button styles */
+.usc-btn-primary {
+  background: linear-gradient(135deg, var(--usc-cardinal) 0%, var(--usc-cardinal-dark) 100%);
+  border: 2px solid var(--usc-gold);
+  box-shadow: 0 4px 15px rgba(153, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
-.christmas-btn-primary:hover {
-  background: linear-gradient(135deg, #d4243f 0%, #a00 100%);
+.usc-btn-primary:hover {
+  background: linear-gradient(135deg, #b30000 0%, #800000 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(153, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.christmas-btn-secondary {
-  background: linear-gradient(135deg, var(--christmas-green) 0%, var(--christmas-green-dark) 100%);
-  border: 2px solid rgba(255, 215, 0, 0.5);
-  box-shadow: 0 4px 15px rgba(34, 139, 34, 0.4);
+.usc-btn-secondary {
+  background: linear-gradient(135deg, var(--usc-grey) 0%, var(--usc-black) 100%);
+  border: 2px solid rgba(255, 204, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
-.christmas-btn-secondary:hover {
-  background: linear-gradient(135deg, #2ea02e 0%, #007700 100%);
+.usc-btn-secondary:hover {
+  background: linear-gradient(135deg, #444 0%, #222 100%);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 204, 0, 0.2);
 }
 
 /* Gold shimmer effect */
 .gold-shimmer {
   background: linear-gradient(90deg,
-      var(--christmas-gold) 0%,
-      #fff8dc 25%,
-      var(--christmas-gold) 50%,
-      #fff8dc 75%,
-      var(--christmas-gold) 100%);
+      var(--usc-gold) 0%,
+      var(--usc-gold-light) 25%,
+      var(--usc-gold) 50%,
+      var(--usc-gold-light) 75%,
+      var(--usc-gold) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -148,18 +113,18 @@ body {
   animation: shimmer 3s linear infinite;
 }
 
-/* Christmas card styling */
-.christmas-card {
-  background: linear-gradient(145deg, rgba(11, 59, 11, 0.3) 0%, rgba(139, 0, 0, 0.2) 100%);
-  border: 1px solid rgba(255, 215, 0, 0.2);
+/* USC card styling */
+.usc-card {
+  background: linear-gradient(145deg, rgba(153, 0, 0, 0.1) 0%, rgba(17, 17, 17, 0.4) 100%);
+  border: 1px solid rgba(255, 204, 0, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(8px);
 }
 
-/* Festive header */
-.christmas-header {
-  background: linear-gradient(180deg, rgba(139, 0, 0, 0.3) 0%, transparent 100%);
-  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+/* USC header */
+.usc-header {
+  background: linear-gradient(180deg, rgba(153, 0, 0, 0.2) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 204, 0, 0.3);
 }
 
 /* Star decoration */

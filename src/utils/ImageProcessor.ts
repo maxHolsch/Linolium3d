@@ -6,6 +6,15 @@ export interface VectorizedData {
   height: number;
 }
 
+export interface VectorizationOptions {
+  turdsize: number;
+  alphamax: number;
+  optcurve: boolean;
+  opttolerance: number;
+  threshold: number;
+  manualThreshold: boolean;
+}
+
 // Initialize Potrace WASM module once
 let potraceInitialized = false;
 async function ensurePotraceInit(): Promise<void> {
@@ -112,7 +121,7 @@ function maybeInvertImage(imageData: ImageData): void {
 /**
  * Vectorize an image file to SVG using Potrace
  */
-export const vectorizeImage = async (file: File): Promise<VectorizedData> => {
+export const vectorizeImage = async (file: File, options?: VectorizationOptions): Promise<VectorizedData> => {
   // Ensure Potrace is initialized
   await ensurePotraceInit();
 
@@ -162,9 +171,12 @@ export const vectorizeImage = async (file: File): Promise<VectorizedData> => {
           // Get image data and preprocess
           const imageData = ctx.getImageData(0, 0, width, height);
 
-          // Apply Otsu's thresholding for optimal binarization
-          const threshold = otsuThreshold(imageData);
-          console.log(`[ImageProcessor] Otsu threshold: ${threshold}`);
+          // Apply Otsu's thresholding for optimal binarization unless manual threshold is provided
+          let threshold = options?.manualThreshold ? options.threshold : otsuThreshold(imageData);
+
+          if (!options?.manualThreshold) {
+            console.log(`[ImageProcessor] Otsu threshold: ${threshold}`);
+          }
 
           applyThreshold(imageData, threshold);
 
@@ -176,10 +188,10 @@ export const vectorizeImage = async (file: File): Promise<VectorizedData> => {
 
           // Use Potrace to vectorize - pass canvas as ImageBitmapSource
           const svg = await potrace(canvas, {
-            turdsize: 2,        // Suppress speckles smaller than this
-            alphamax: 1.0,      // Corner threshold (0 = sharp, 1.334 = smooth)
-            optcurve: true,     // Optimize curves
-            opttolerance: 0.2,  // Curve optimization tolerance
+            turdsize: options?.turdsize ?? 2,        // Suppress speckles smaller than this
+            alphamax: options?.alphamax ?? 1.0,      // Corner threshold (0 = sharp, 1.334 = smooth)
+            optcurve: options?.optcurve ?? true,     // Optimize curves
+            opttolerance: options?.opttolerance ?? 0.2,  // Curve optimization tolerance
             color: '#000000',   // Path fill color
             background: 'transparent'
           });
