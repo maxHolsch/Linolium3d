@@ -22,6 +22,10 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
+  // SVG History for Undo/Redo
+  const [svgHistory, setSvgHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
   // Vectorization options
   const [vectorOptions, setVectorOptions] = useState<VectorizationOptions>({
     turdsize: 2,
@@ -29,7 +33,8 @@ function App() {
     optcurve: true,
     opttolerance: 0.2,
     threshold: 128,
-    manualThreshold: false
+    manualThreshold: false,
+    algorithm: 'otsu'
   });
 
   // Dimension controls
@@ -53,6 +58,43 @@ function App() {
     }
   }, [svgString, dimensions]);
 
+  // History helpers
+  const pushToHistory = useCallback((newSvg: string) => {
+    setSvgHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(newSvg);
+      // Limit history to 50 items
+      if (newHistory.length > 50) newHistory.shift();
+      return newHistory;
+    });
+    setHistoryIndex(prev => {
+      const newIdx = Math.min(prev + 1, 49);
+      return newIdx;
+    });
+  }, [historyIndex]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const prevSvg = svgHistory[newIndex];
+      setSvgString(prevSvg);
+      setHistoryIndex(newIndex);
+      const newModel = create3DModel(prevSvg, dimensions);
+      setModel(newModel);
+    }
+  }, [historyIndex, svgHistory, dimensions]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < svgHistory.length - 1) {
+      const newIndex = historyIndex + 1;
+      const nextSvg = svgHistory[newIndex];
+      setSvgString(nextSvg);
+      setHistoryIndex(newIndex);
+      const newModel = create3DModel(nextSvg, dimensions);
+      setModel(newModel);
+    }
+  }, [historyIndex, svgHistory, dimensions]);
+
   // Re-vectorize when options change
   const reVectorize = useCallback(async (optionsOverride?: VectorizationOptions) => {
     if (!uploadedFile) return;
@@ -61,10 +103,12 @@ function App() {
       const optionsToUse = optionsOverride || vectorOptions;
       const { svgString: vectorizedSvg } = await vectorizeImage(uploadedFile, optionsToUse);
       setSvgString(vectorizedSvg);
+      setSvgHistory([vectorizedSvg]);
+      setHistoryIndex(0);
       const newModel = create3DModel(vectorizedSvg, dimensions);
       setModel(newModel);
-    } catch (err) {
-      setError('Failed to re-process image.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to re-process image.');
     } finally {
       setIsProcessing(false);
     }
@@ -81,11 +125,13 @@ function App() {
     try {
       const { svgString: vectorizedSvg } = await vectorizeImage(file, vectorOptions);
       setSvgString(vectorizedSvg);
+      setSvgHistory([vectorizedSvg]);
+      setHistoryIndex(0);
       const newModel = create3DModel(vectorizedSvg, dimensions);
       setModel(newModel);
       setViewMode('3d');
-    } catch (err) {
-      setError('Failed to process image. Please try a different file.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to process image. Please try a different file.');
     } finally {
       setIsProcessing(false);
     }
@@ -330,7 +376,19 @@ function App() {
             {viewMode === '3d' ? (
               <Preview3D model={model} />
             ) : (
-              <PreviewSVG svgString={svgString} />
+              <PreviewSVG
+                svgString={svgString}
+                onSvgUpdate={(newSvg) => {
+                  setSvgString(newSvg);
+                  pushToHistory(newSvg);
+                  const newModel = create3DModel(newSvg, dimensions);
+                  setModel(newModel);
+                }}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={historyIndex > 0}
+                canRedo={historyIndex < svgHistory.length - 1}
+              />
             )}
           </div>
 
@@ -341,6 +399,29 @@ function App() {
                 <Layers className="w-5 h-5" /> SVG Refinement
               </h2>
               <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">
+                    Segmentation Algorithm
+                  </label>
+                  <select
+                    value={vectorOptions.algorithm}
+                    onChange={(e) => {
+                      const nextOptions = {
+                        ...vectorOptions,
+                        algorithm: e.target.value as any
+                      };
+                      setVectorOptions(nextOptions);
+                      reVectorize(nextOptions);
+                    }}
+                    className="w-full px-3 py-2 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-usc-gold focus:border-transparent transition-all"
+                    style={{ background: 'rgba(153, 0, 0, 0.1)', border: '1px solid rgba(255, 204, 0, 0.2)' }}
+                  >
+                    <option value="otsu" className="bg-usc-black">Standard Otsu (Fast)</option>
+                    <option value="median-otsu" className="bg-usc-black">Median + Otsu (No Noise)</option>
+                    <option value="adaptive" className="bg-usc-black">Adaptive Gaussian (Gradients)</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">
                     Threshold (B&W) {vectorOptions.manualThreshold ? '(Manual)' : '(Auto)'}
